@@ -42,7 +42,7 @@ jobs:
 
       - name: Upload Validation Report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: terraform-validate-report
           path: ${{ env.WORKING_DIR }}
@@ -87,7 +87,7 @@ jobs:
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
 
       - name: Save Terraform Plan
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: tfplan
           path: ${{ env.WORKING_DIR }}/tfplan
@@ -165,7 +165,7 @@ jobs:
 
       - name: Upload Snyk Results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: snyk-scan-results
           path: snyk-report.json
