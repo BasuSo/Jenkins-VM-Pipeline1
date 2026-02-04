@@ -70,7 +70,7 @@ resource "azurerm_linux_virtual_machine" "MyfirstJenkinsVM" {
   
   tags = {
     Owner       = "BasuSo"
-    Project     = "Jenkins-VM-Pipeline1_Test"
+    Project     = "Jenkins-VM-Pipeline1"
   }
 
   os_disk {
