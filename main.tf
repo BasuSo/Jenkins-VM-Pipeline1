@@ -70,9 +70,9 @@ resource "azurerm_linux_virtual_machine" "MyfirstJenkinsVM" {
   
   tags = {
     Owner       = "BasuSo"
-    Project     = "Jenkins-VM-Pipeline1"
+    Project     = "Jenkins-VM-Pipeline1_Test"
   }
-  
+
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
