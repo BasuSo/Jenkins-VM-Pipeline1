@@ -123,7 +123,7 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan
+        run: terraform destroy -auto-approve tfplan
         working-directory: ${{ env.WORKING_DIR }}
 
       - name: Upload Terraform Plan
