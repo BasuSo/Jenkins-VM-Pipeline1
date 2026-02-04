@@ -107,7 +107,7 @@ jobs:
   bootstrap-tests:
     name: Bootstrap Script Tests
     runs-on: ubuntu-latest
-    needs: terraform-plan
+    needs: terraform-validate
     
     steps:
       - name: Checkout code
