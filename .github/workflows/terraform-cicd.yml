@@ -1,0 +1,167 @@
+name: Terraform CI/CD
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '**.tf'
+      - '**.tftpl'
+      - '.github/workflows/terraform-ci.yml'
+  workflow_dispatch:
+
+env:
+  TF_VERSION: 1.6.0
+  WORKING_DIR: .
+  SNYK_SKIP_UPDATE: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+
+  # ======================
+  # CI: Terraform Validation
+  # ======================
+  terraform-validate:
+    name: Terraform Validate
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install unzip
+        run: sudo apt-get update && sudo apt-get install -y unzip
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Initialize Terraform
+        run: terraform init -backend=false
+        working-directory: ${{ env.WORKING_DIR }}
+
+      - name: Format check
+        run: terraform fmt
+        working-directory: ${{ env.WORKING_DIR }}
+
+      - name: Validate Terraform
+        run: terraform validate
+        working-directory: ${{ env.WORKING_DIR }}
+
+      - name: Terraform Plan (dry run)
+        run: terraform plan -detailed-exitcode -out=tfplan || true
+        working-directory: ${{ env.WORKING_DIR }}
+
+      - name: Upload Validation Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-validate-report
+          path: ${{ env.WORKING_DIR }}
+          retention-days: 30
+
+  # ======================
+  # CD: Terraform Plan & Apply
+  # ======================
+  terraform-deploy:
+    name: Terraform Deploy
+    runs-on: self-hosted
+    needs: terraform-validate
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Create federated credential dynamically
+        run: |
+          az ad app federated-credential create \
+            --id ${{ secrets.AZURE_CLIENT_ID }} \
+            --parameters '{
+              "name": "github-main",
+              "issuer": "https://token.actions.githubusercontent.com",
+              "subject": "repo:BasuSo/Jenkins-VM-Pipeline1:ref:refs/heads/main",
+              "audiences": ["api://AzureADTokenExchange"]
+            }'
+
+      - name: Azure Login via OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          enable-oidc: true
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ${{ env.WORKING_DIR }}
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+        working-directory: ${{ env.WORKING_DIR }}
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+        working-directory: ${{ env.WORKING_DIR }}
+
+      - name: Upload Terraform Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: ${{ env.WORKING_DIR }}/tfplan
+          retention-days: 1
+
+  # ======================
+  # CI/CD Summary
+  # ======================
+  summary:
+    name: CI/CD Summary
+    runs-on: self-hosted
+    needs: [terraform-validate, terraform-deploy]
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Generate Final Report
+        run: |
+          echo "## 📊 Terraform CI/CD Pipeline Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Pipeline Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp**: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Actor**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Jobs Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Terraform Validation" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Terraform Deploy (Plan + Apply)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts Generated" >> $GITHUB_STEP_SUMMARY
+          echo "- Terraform plan (tfplan) - 1 day retention" >> $GITHUB_STEP_SUMMARY
+          echo "- Validation report - 30 days retention" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo "⚠️ Pipeline Failed!"
+          echo "Workflow: ${{ github.workflow }}"
+          echo "Run: ${{ github.run_id }}"
+          echo "Check logs at: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
