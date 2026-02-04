@@ -96,6 +96,7 @@ jobs:
    #           "subject": "repo:BasuSo/Jenkins-VM-Pipeline1:ref:refs/heads/main",
    #           "audiences": ["api://AzureADTokenExchange"]
    #         }'
+   ##
 
       - name: Azure Login via OIDC
         uses: azure/login@v2
