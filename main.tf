@@ -67,7 +67,12 @@ resource "azurerm_linux_virtual_machine" "MyfirstJenkinsVM" {
     username   = "adminuser"
     public_key = file("${path.module}/ssh/id_rsa.pub")
   }
-
+  
+  tags = {
+    Owner       = "BasuSo"
+    Project     = "Jenkins-VM-Pipeline1"
+  }
+  
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
