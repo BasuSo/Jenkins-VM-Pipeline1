@@ -40,13 +40,13 @@ jobs:
         run: terraform validate
         working-directory: ${{ env.WORKING_DIR }}
 
-#      - name: Upload Validation Report
-#        if: always()
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: terraform-validate-report
-#          path: ${{ env.WORKING_DIR }}
-#          retention-days: 30
+      - name: Upload Validation Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-validate-report
+          path: ${{ env.WORKING_DIR }}
+          retention-days: 30
 # ###
 #   terraform-plan:
 #     name: Terraform Plan
