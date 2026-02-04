@@ -65,7 +65,7 @@ resource "azurerm_linux_virtual_machine" "MyfirstJenkinsVM" {
 
   admin_ssh_key {
     username   = "adminuser"
-    public_key = file("C:/Users/rashn/.ssh/id_rsa.pub")
+    public_key = file(".ssh/id_rsa.pub")
   }
 
   os_disk {
