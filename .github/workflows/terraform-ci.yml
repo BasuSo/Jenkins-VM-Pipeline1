@@ -161,7 +161,7 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
 
       - name: Run Snyk Security Scan
-        uses: snyk/actions/iac@v1.11.2
+        uses: snyk/actions/iac@v1
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
