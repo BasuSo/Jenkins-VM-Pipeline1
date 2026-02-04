@@ -1,0 +1,45 @@
+#!bin/bash
+echo "=====UPDATING SYSTEM===="
+sudo apt update -y
+
+echo "=====installing JDK====="
+sudo apt install openjdk-17-jdk -y
+
+
+echo "=====Installing Jenkins===="
+sudo mkdir -p /etc/apt/keyrings
+
+curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee \
+/etc/apt/keyrings/jenkins-keyring.asc > /dev/null
+
+echo "deb [signed-by=/etc/apt/keyrings/jenkins-keyring.asc]" \
+  https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+
+sudo apt update -y
+sudo apt install -y jenkins
+
+sudo systemctl enable jenkins
+sudo systemctl start jenkins
+sudo systemctl status jenkins
+
+# Update system
+sudo apt-get install -y gnupg software-properties-common curl
+
+# Add HashiCorp GPG key
+curl -fsSL https://apt.releases.hashicorp.com/gpg | \
+  sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+
+# Verify key fingerprint (optional but recommended)
+gpg --no-default-keyring \
+  --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg \
+  --fingerprint
+
+# Add HashiCorp repository
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] \
+https://apt.releases.hashicorp.com $(lsb_release -cs) main" | \
+  sudo tee /etc/apt/sources.list.d/hashicorp.list
+
+# Install Terraform
+sudo apt-get update -y
+sudo apt-get install -y terraform
