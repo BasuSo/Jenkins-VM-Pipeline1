@@ -86,16 +86,16 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
-      - name: Create federated credential dynamically
-        run: |
-          az ad app federated-credential create \
-            --id ${{ secrets.AZURE_CLIENT_ID }} \
-            --parameters '{
-              "name": "github-main",
-              "issuer": "https://token.actions.githubusercontent.com",
-              "subject": "repo:BasuSo/Jenkins-VM-Pipeline1:ref:refs/heads/main",
-              "audiences": ["api://AzureADTokenExchange"]
-            }'
+   #   - name: Create federated credential dynamically
+   #     run: |
+   #       az ad app federated-credential create \
+   #         --id ${{ secrets.AZURE_CLIENT_ID }} \
+   #         --parameters '{
+   #           "name": "github-main",
+   #           "issuer": "https://token.actions.githubusercontent.com",
+   #           "subject": "repo:BasuSo/Jenkins-VM-Pipeline1:ref:refs/heads/main",
+   #           "audiences": ["api://AzureADTokenExchange"]
+   #         }'
 
       - name: Azure Login via OIDC
         uses: azure/login@v2
