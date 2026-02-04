@@ -33,7 +33,7 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
 
       - name: Format check
-        run: terraform fmt -y
+        run: terraform fmt
         working-directory: ${{ env.WORKING_DIR }}
 
       - name: Validate Terraform
